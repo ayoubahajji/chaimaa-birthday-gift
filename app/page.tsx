@@ -1,61 +1,118 @@
-const portraits = [
-  "bfecd333187eed2b", "39312cf1492034d3", "35be9d026393057f",
-  "663256ad5b21aa49", "8101ccca78459b20", "4b770d58118c8c86",
-  "f292948a93d82c4f", "683ec551d4f19272", "fab7108c4ced00ed",
+"use client";
+
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+
+const gallery = [
+  ["/gift/8101ccca78459b20.jpg", "the look that starts a thousand sunsets", "close enough to remember"],
+  ["/gift/39312cf1492034d3.jpg", "a little mischief, a lot of heart", "soft evidence"],
+  ["/gift/4b770d58118c8c86.jpg", "you + a sunflower = my favourite equation", "the golden chapter"],
+  ["/gift/683ec551d4f19272.jpg", "there is a universe behind that glance", "midnight cinema"],
+  ["/gift/663256ad5b21aa49.jpg", "every version of you is worth keeping", "small-room magic"],
+  ["/gift/eddde12ad8913a26.jpg", "the sea keeps your secret", "blue hour"],
+  ["/gift/greenhouse.jpg", "you make even the sky feel personal", "open air"],
+  ["/gift/birthday-portrait.jpeg", "twenty-three, and still becoming", "the next page"],
 ];
 
+const petals = ["✦", "·", "✧", "♡", "✦", "·", "✧", "♡", "✦", "·", "✧", "♡"];
+
 export default function Home() {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const noRef = useRef<HTMLButtonElement>(null);
+  const gameRef = useRef<HTMLDivElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [answer, setAnswer] = useState<"yes" | null>(null);
+  const [noPosition, setNoPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = 0.72;
+    const start = () => {
+      audio.play().then(() => setPlaying(true)).catch(() => undefined);
+    };
+    start();
+    window.addEventListener("pointerdown", start, { once: true });
+    window.addEventListener("keydown", start, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", start);
+    };
+  }, []);
+
+  useEffect(() => {
+    const targets = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("is-visible");
+      });
+    }, { threshold: 0.12 });
+    targets.forEach((target) => observer.observe(target));
+    return () => observer.disconnect();
+  }, []);
+
+  const toggleSound = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) { audio.play().then(() => setPlaying(true)).catch(() => undefined); }
+    else { audio.pause(); setPlaying(false); }
+  };
+
+  const moveNo = () => {
+    const panel = gameRef.current;
+    const button = noRef.current;
+    if (!panel || !button) return;
+    const maxX = Math.max(0, panel.clientWidth - button.offsetWidth - 24);
+    const maxY = Math.max(0, panel.clientHeight - button.offsetHeight - 24);
+    setNoPosition({ x: Math.round(12 + Math.random() * maxX), y: Math.round(12 + Math.random() * maxY) });
+  };
+
   return (
-    <main>
-      <section className="hero" aria-labelledby="title">
-        <div className="grain" />
-        <nav>
-          <span className="monogram">CN</span>
-          <a href="#gallery">Portraits</a>
-          <a className="ig" href="https://www.instagram.com/chaimaa_nouassi/" target="_blank" rel="noreferrer">Instagram ↗</a>
-        </nav>
+    <main className="gift-site">
+      <audio ref={audioRef} src="/gift/birthday-song.mp3" loop preload="auto" aria-label="Birthday song" />
+      <button className={`sound-toggle ${playing ? "is-playing" : ""}`} onClick={toggleSound} aria-label={playing ? "Pause the birthday song" : "Play the birthday song"}>
+        <span className="sound-orbit" /> {playing ? "sound on" : "tap for sound"}
+      </button>
 
-        <div className="hero-copy">
-          <p className="eyebrow">A portrait in light, movement &amp; quiet confidence</p>
-          <h1 id="title" aria-label="Chaimaa">
-            {"CHAIMAA".split("").map((letter, index) => (
-              <span className={`photo-letter letter-${index + 1}`} key={`${letter}-${index}`}>{letter}</span>
-            ))}
-          </h1>
-          <div className="hero-meta">
-            <p>Born to win <span>♥</span></p>
-            <p className="location">Yousra · Morocco</p>
-          </div>
+      <section className="opening" id="top">
+        <div className="opening-stars" aria-hidden="true">{petals.map((petal, index) => <span key={`${petal}-${index}`} style={{ left: `${8 + index * 7.3}%`, top: `${18 + (index % 4) * 17}%`, animationDelay: `${index * .22}s` }}>{petal}</span>)}</div>
+        <nav className="gift-nav"><span className="nav-mark">A + C</span><span>23 / 07</span><a href="#letter">open slowly ↓</a></nav>
+        <div className="opening-stage">
+          <div className="diamond-shadow" />
+          <div className="diamond-frame"><img src="/gift/birthday-portrait.jpeg" alt="Chaimaa in a soft blue portrait" /></div>
+          <div className="opening-copy"><p className="kicker">a little universe, made for one person</p><h1>Chaimaa<br /><em>you are the light</em></h1><p className="tiny-note">turn the sound up · let the first note find you</p></div>
         </div>
-
-        <div className="scroll-cue"><i /> scroll to discover</div>
+        <div className="opening-footer"><span>for your 23rd orbit around the sun</span><span>scroll when you are ready</span></div>
       </section>
 
-      <section className="statement">
-        <p className="index">01 / Essence</p>
-        <h2>Soft as daylight.<br /><em>Unmistakably</em> her.</h2>
-        <p className="aside">A study in natural beauty—curly silhouettes, sun-warmed moments, and a gaze that never needs to ask for attention.</p>
+      <section className="letter-section" id="letter">
+        <div className="letter-intro reveal"><p className="section-label">01 / A letter in the margins</p><p className="side-note">written with the kind of feeling that makes the room go quiet</p></div>
+        <div className="letter-wrap reveal">
+          <div className="letter-paper"><span className="paper-stamp">23</span><p className="handwritten">My dear Chaimaa,</p><p className="letter-body">I hope this new year of your life is gentle with you. I hope it gives you a thousand reasons to smile, and the courage to keep every dream that makes your eyes shine.</p><p className="letter-body">You have this rare way of making ordinary moments feel like they were written just for us. Your laugh, your softness, the way you notice little things — they stay with me long after the moment is gone.</p><p className="letter-body">I want you to know this, without a single doubt: <strong>you are the light in my life.</strong> Not because you have to be anything for me, but because being close to your light makes the whole world feel warmer.</p><p className="letter-body">So here is my wish for 23: may you feel loved in every room, may joy find you unexpectedly, and may you always see the beautiful person I see when I look at you.</p><p className="handwritten signature">Always cheering for your light,<br /><em>AyouB Ahajji</em></p></div>
+        </div>
+        <div className="letter-image reveal"><img src="/gift/whatsapp-sun.jpeg" alt="Chaimaa in warm sunlight" /><span>keep this feeling</span></div>
       </section>
 
-      <section className="gallery" id="gallery" aria-label="Selected portraits">
-        {portraits.map((id, index) => (
-          <figure className={`portrait p${index + 1}`} key={id}>
-            <img src={`/portraits/${id}.jpg`} alt={`Chaimaa portrait ${index + 1}`} loading={index < 3 ? "eager" : "lazy"} />
-            <figcaption>{String(index + 1).padStart(2, "0")} <span>—</span> une lumière</figcaption>
-          </figure>
-        ))}
+      <section className="zoom-section">
+        <div className="zoom-copy reveal"><p className="section-label">02 / The details I keep</p><h2>Some people are a whole <em>season.</em></h2><p>There is no single version of you I love seeing. There is the sunlight one, the sleepy one, the brave one, the one who hides behind a cap and still somehow gives the game away.</p></div>
+        <div className="zoom-portrait reveal"><img src="/gift/8101ccca78459b20.jpg" alt="Close-up portrait of Chaimaa" /><div className="zoom-lens"><span>zoom in</span><i /></div></div>
       </section>
 
-      <section className="interlude">
-        <div className="orb"><img src="/portraits/eddde12ad8913a26.jpg" alt="Chaimaa by the sea" /></div>
-        <p>Her world,<br /><em>her rhythm.</em></p>
+      <section className="pet-section">
+        <div className="pet-copy reveal"><p className="section-label">03 / For the soft-hearted</p><h2>Every creature you love gets a little more <em>loved.</em></h2><p>That is one of the things I notice most: your tenderness never needs an audience. It simply appears — in the way you stop for a paw, a little face, a small life asking to be held.</p><span className="paw-line">♡ · · · ♡ · · · ♡</span></div>
+        <div className="cat-art reveal"><img src="/gift/cat-story.png" alt="Illustrated cat moments" /><span className="cat-caption">your kind of magic has whiskers</span></div>
       </section>
 
-      <footer>
-        <div className="footer-name">CHAIMAA</div>
-        <p>Curated with admiration · 2026</p>
-        <a href="https://www.instagram.com/chaimaa_nouassi/" target="_blank" rel="noreferrer">@chaimaa_nouassi ↗</a>
-      </footer>
+      <section className="memory-section" id="gallery">
+        <div className="memory-heading reveal"><p className="section-label">04 / A small archive of you</p><h2>Proof that beauty<br /><em>moves.</em></h2><p>Not posed. Not perfect. Just yours.</p></div>
+        <div className="memory-grid">{gallery.map(([src, alt, caption], index) => <figure className={`memory-card card-${index + 1} reveal`} key={src}><img src={src} alt={alt} loading={index < 2 ? "eager" : "lazy"} /><figcaption><span>{String(index + 1).padStart(2, "0")}</span>{caption}</figcaption></figure>)}</div>
+      </section>
+
+      <section className="finale" id="question">
+        <div className="finale-backdrop"><img src="/gift/eddde12ad8913a26.jpg" alt="Chaimaa by the sea" /></div>
+        <div className="finale-content reveal"><p className="section-label">05 / The only question</p><p className="finale-prelude">I saved the best page for last.</p><h2>Do you accept<br /><em>to be my kitten?</em></h2><p className="game-subtitle">No pressure. Just a tiny, ridiculous, very sincere question.</p><div className={`answer-zone ${answer ? "answered" : ""}`} ref={gameRef}><button className="yes-button" onClick={() => setAnswer("yes")}>yes, obviously <span>♡</span></button><button className="no-button" ref={noRef} onPointerEnter={moveNo} onFocus={moveNo} onClick={moveNo} style={{ transform: `translate(${noPosition.x}px, ${noPosition.y}px)` }}>no</button></div>{answer && <div className="congrats" role="status"><div className="confetti" aria-hidden="true">{Array.from({ length: 34 }, (_, index) => <span key={index} style={{ left: `${10 + ((index * 29) % 80)}%`, top: `${32 + ((index * 11) % 30)}%`, animationDelay: `${index * .04}s` }}>✦</span>)}</div><p>my heart just did a cartwheel.</p><strong>Happy 23, my favourite light.</strong><small>— AyouB</small></div>}</div>
+      </section>
+
+      <footer className="gift-footer"><p>made slowly, with a song, a thousand memories, and a very full heart</p><span>Chaimaa · 23</span><a href="#top">back to the first note ↑</a></footer>
     </main>
   );
 }
