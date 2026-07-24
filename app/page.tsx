@@ -13,14 +13,13 @@ const gallery = [
   ["/gift/birthday-portrait.jpeg", "twenty-three, and still becoming", "the next page"],
 ];
 
-const petals = ["✦", "·", "✧", "♡", "✦", "·", "✧", "♡", "✦", "·", "✧", "♡"];
-
 export default function Home() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const noRef = useRef<HTMLButtonElement>(null);
   const gameRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
   const [opened, setOpened] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const [answer, setAnswer] = useState<"yes" | null>(null);
   const [noPosition, setNoPosition] = useState({ x: 0, y: 0 });
 
@@ -28,16 +27,6 @@ export default function Home() {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = 0.72;
-    const start = () => {
-      audio.play().then(() => setPlaying(true)).catch(() => undefined);
-    };
-    start();
-    window.addEventListener("pointerdown", start, { once: true });
-    window.addEventListener("keydown", start, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", start);
-      window.removeEventListener("keydown", start);
-    };
   }, []);
 
   useEffect(() => {
@@ -58,11 +47,15 @@ export default function Home() {
     else { audio.pause(); setPlaying(false); }
   };
 
-  const openBirthdayWish = () => {
+  const handleCatClick = () => {
+    if (transitioning || opened) return;
     const audio = audioRef.current;
     if (audio) audio.play().then(() => setPlaying(true)).catch(() => undefined);
-    setOpened(true);
-    window.setTimeout(() => document.getElementById("birthday-story")?.scrollIntoView({ behavior: "smooth" }), 180);
+    
+    setTransitioning(true);
+    setTimeout(() => {
+      setOpened(true);
+    }, 600);
   };
 
   const moveNo = () => {
@@ -81,39 +74,76 @@ export default function Home() {
         <span className="sound-orbit" /> {playing ? "sound on" : "tap for sound"}
       </button>
 
-      <section className={`birthday-cover ${opened ? "is-opened" : ""}`} id="top" aria-label="Birthday opening">
-        <div className="cover-sky" aria-hidden="true"><span /><span /><span /><span /><span /><span /></div>
-        <div className="cover-glow" aria-hidden="true" />
-        <div className="cover-card">
-          <p className="cover-overline">25 July · a private birthday wish</p>
-          <div className="cover-jewel"><img src="/gift/birthday-portrait.jpeg" alt="" /></div>
-          <p className="cover-from">from AyouB Ahajji, with a full heart</p>
-          <h1>Happy Birthday,<br /><em>Chaimaa.</em></h1>
-          <p className="cover-note">Twenty-three is not just a number today.<br />It is a new sky opening above you.</p>
-          <button className="open-wish" onClick={openBirthdayWish}>open the birthday wish <span>♡</span></button>
-          <p className="cover-whisper">sound makes the stars wake up</p>
+      <section className={`birthday-cover ${transitioning ? "is-transitioning" : ""} ${opened ? "is-opened" : ""}`} id="top" aria-label="Birthday opening">
+        {/* Shockwave & Light Flare Transition Layer */}
+        <div className="portal-burst-overlay" aria-hidden="true">
+          <div className="burst-wave wave-1" />
+          <div className="burst-wave wave-2" />
+          <div className="burst-flash" />
+          {Array.from({ length: 24 }, (_, i) => (
+            <span key={i} className="burst-particle" style={{
+              "--angle": `${i * 15}deg`,
+              "--dist": `${120 + (i % 5) * 40}px`,
+              "--delay": `${(i % 4) * 0.05}s`
+            } as React.CSSProperties}>✦</span>
+          ))}
         </div>
-        <p className="cover-footer">for the girl who turns ordinary days into beautiful ones</p>
-      </section>
 
-      <section className="opening" id="birthday-story">
-        <div className="opening-stars" aria-hidden="true">{petals.map((petal, index) => <span key={`${petal}-${index}`} style={{ left: `${8 + index * 7.3}%`, top: `${18 + (index % 4) * 17}%`, animationDelay: `${index * .22}s` }}>{petal}</span>)}</div>
-        <nav className="gift-nav"><span className="nav-mark">A + C</span><span>25 / 07</span><a href="#letter">open slowly ↓</a></nav>
-        <div className="opening-stage">
-          <div className="spell-rings" aria-hidden="true"><i /><i /><i /></div>
-          <div className="orbit-gem gem-one"><span>25</span></div>
-          <div className="orbit-gem gem-two"><span>07</span></div>
-          <div className="cat-diamond"><img src="/gift/cat-story.png" alt="" /></div>
-          <div className="portrait-gem"><img src="/gift/birthday-portrait.jpeg" alt="Chaimaa in a soft blue portrait" /></div>
-          <div className="opening-copy"><p className="kicker">the night kept a secret until it could say your name</p><h1>Chaimaa<br /><em>and then the sky answered</em></h1><p className="tiny-note">a ring · a diamond · a tiny cat guardian · and your new year</p></div>
+        {/* Ambient floating sparkles */}
+        <div className="cat-sparkles" aria-hidden="true">
+          {Array.from({ length: 24 }, (_, i) => (
+            <span key={i} style={{
+              left: `${(i * 29 + 4) % 96}%`,
+              top: `${(i * 19 + 6) % 94}%`,
+              animationDelay: `${((i * 0.45) % 5).toFixed(2)}s`,
+              animationDuration: `${(5 + (i % 4) * 2).toFixed(1)}s`
+            }}>{i % 4 === 0 ? "✧" : i % 4 === 1 ? "✦" : i % 4 === 2 ? "♡" : "•"}</span>
+          ))}
         </div>
-        <div className="opening-footer"><span>for your 23rd orbit around the sun</span><span>scroll when you are ready</span></div>
+
+        {/* Luxury Cat Intro */}
+        <div className="cat-intro">
+          <div className="cat-halo" aria-hidden="true" />
+          <div className="cat-frame" onClick={handleCatClick} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleCatClick(); }} role="button" tabIndex={0} aria-label="Tap the magical kitten to unlock your birthday surprise">
+            <span className="cat-ring cat-ring-outer" aria-hidden="true" />
+            <span className="cat-ring cat-ring-inner" aria-hidden="true" />
+            <span className="cat-glow-core" aria-hidden="true" />
+            <img className="cat-img" src="/gift/luxury-cat.jpg" alt="Chaimaa's magical birthday kitten guardian" />
+            <div className="cat-badge">
+              <span>TAP TO UNLOCK</span>
+            </div>
+          </div>
+          <div className="cat-text">
+            <p className="cat-whisper">Chaimaa&rsquo;s Secret Guardian</p>
+            <p className="cat-cta">touch the kitten to reveal the magic <span>♡</span></p>
+          </div>
+        </div>
+
+        {/* Paw trail at bottom */}
+        <div className="cat-trail" aria-hidden="true">
+          <span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span>
+        </div>
+
+        {/* Birthday Message Reveal */}
+        <div className="bday-msg">
+          <div className="bday-msg-card">
+            <p className="bday-overline">25 July · a private birthday wish</p>
+            <div className="bday-portrait-wrap">
+              <span className="portrait-ring" />
+              <div className="bday-portrait"><img src="/gift/birthday-portrait.jpeg" alt="Chaimaa" /></div>
+            </div>
+            <p className="bday-from">from AyouB Ahajji, with a full heart</p>
+            <h1>Happy Birthday,<br /><em>Chaimaa.</em></h1>
+            <p className="bday-note">Twenty-three is not just a number today.<br />It is a new sky opening above you.</p>
+            <p className="bday-scroll">scroll when you are ready <span>↓</span></p>
+          </div>
+        </div>
       </section>
 
       <section className="letter-section" id="letter">
         <div className="letter-intro reveal"><p className="section-label">01 / A letter in the margins</p><p className="side-note">written with the kind of feeling that makes the room go quiet</p></div>
         <div className="letter-wrap reveal">
-          <aside className="lyric-card"><p className="lyric-label">A song left beside this letter</p><blockquote>You know I never meant to see you again<br />But I only passed by as a friend, yeah<br />All this time I stayed out of sight<br />I started wondering why</blockquote><blockquote>Now I wish it would rain down, down on me<br />Ooh, yes, I wish it would rain, rain down on me now<br />Ooh, yes, I wish it would rain down, down on me<br />Ooh, yes, I wish it would rain on me</blockquote><cite>— Phil Collins, “I Wish It Would Rain Down”</cite></aside>
+          <aside className="lyric-card"><p className="lyric-label">A song left beside this letter</p><blockquote>You know I never meant to see you again<br />But I only passed by as a friend, yeah<br />All this time I stayed out of sight<br />I started wondering why</blockquote><blockquote>Now I wish it would rain down, down on me<br />Ooh, yes, I wish it would rain, rain down on me now<br />Ooh, yes, I wish it would rain down, down on me<br />Ooh, yes, I wish it would rain on me</blockquote><cite>— Phil Collins, &ldquo;I Wish It Would Rain Down&rdquo;</cite></aside>
           <div className="letter-paper"><span className="paper-stamp">23</span><p className="handwritten">My dear Chaimaa,</p><p className="letter-body">I hope this new year of your life is gentle with you. I hope it gives you a thousand reasons to smile, and the courage to keep every dream that makes your eyes shine.</p><p className="letter-body">You have this rare way of making ordinary moments feel like they were written just for us. Your laugh, your softness, the way you notice little things — they stay with me long after the moment is gone.</p><p className="letter-body">I want you to know this, without a single doubt: <strong>you are the light in my life.</strong> Not because you have to be anything for me, but because being close to your light makes the whole world feel warmer.</p><p className="letter-body">So here is my wish for 23: may you feel loved in every room, may joy find you unexpectedly, and may you always see the beautiful person I see when I look at you.</p><p className="handwritten signature">Always cheering for your light,<br /><em>AyouB Ahajji</em></p></div>
         </div>
         <div className="letter-image reveal"><img src="/gift/whatsapp-sun.jpeg" alt="Chaimaa in warm sunlight" /><span>keep this feeling</span></div>
