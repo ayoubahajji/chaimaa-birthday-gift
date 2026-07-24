@@ -20,6 +20,7 @@ export default function Home() {
   const noRef = useRef<HTMLButtonElement>(null);
   const gameRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
+  const [opened, setOpened] = useState(false);
   const [answer, setAnswer] = useState<"yes" | null>(null);
   const [noPosition, setNoPosition] = useState({ x: 0, y: 0 });
 
@@ -57,6 +58,13 @@ export default function Home() {
     else { audio.pause(); setPlaying(false); }
   };
 
+  const openBirthdayWish = () => {
+    const audio = audioRef.current;
+    if (audio) audio.play().then(() => setPlaying(true)).catch(() => undefined);
+    setOpened(true);
+    window.setTimeout(() => document.getElementById("birthday-story")?.scrollIntoView({ behavior: "smooth" }), 180);
+  };
+
   const moveNo = () => {
     const panel = gameRef.current;
     const button = noRef.current;
@@ -73,7 +81,22 @@ export default function Home() {
         <span className="sound-orbit" /> {playing ? "sound on" : "tap for sound"}
       </button>
 
-      <section className="opening" id="top">
+      <section className={`birthday-cover ${opened ? "is-opened" : ""}`} id="top" aria-label="Birthday opening">
+        <div className="cover-sky" aria-hidden="true"><span /><span /><span /><span /><span /><span /></div>
+        <div className="cover-glow" aria-hidden="true" />
+        <div className="cover-card">
+          <p className="cover-overline">25 July · a private birthday wish</p>
+          <div className="cover-jewel"><img src="/gift/birthday-portrait.jpeg" alt="" /></div>
+          <p className="cover-from">from AyouB Ahajji, with a full heart</p>
+          <h1>Happy Birthday,<br /><em>Chaimaa.</em></h1>
+          <p className="cover-note">Twenty-three is not just a number today.<br />It is a new sky opening above you.</p>
+          <button className="open-wish" onClick={openBirthdayWish}>open the birthday wish <span>♡</span></button>
+          <p className="cover-whisper">sound makes the stars wake up</p>
+        </div>
+        <p className="cover-footer">for the girl who turns ordinary days into beautiful ones</p>
+      </section>
+
+      <section className="opening" id="birthday-story">
         <div className="opening-stars" aria-hidden="true">{petals.map((petal, index) => <span key={`${petal}-${index}`} style={{ left: `${8 + index * 7.3}%`, top: `${18 + (index % 4) * 17}%`, animationDelay: `${index * .22}s` }}>{petal}</span>)}</div>
         <nav className="gift-nav"><span className="nav-mark">A + C</span><span>25 / 07</span><a href="#letter">open slowly ↓</a></nav>
         <div className="opening-stage">
@@ -82,7 +105,7 @@ export default function Home() {
           <div className="orbit-gem gem-two"><span>07</span></div>
           <div className="cat-diamond"><img src="/gift/cat-story.png" alt="" /></div>
           <div className="portrait-gem"><img src="/gift/birthday-portrait.jpeg" alt="Chaimaa in a soft blue portrait" /></div>
-          <div className="opening-copy"><p className="kicker">a birthday spell for one extraordinary soul</p><h1>Chaimaa<br /><em>made of light &amp; little miracles</em></h1><p className="tiny-note">a ring · a diamond · a tiny cat guardian · and your new year</p></div>
+          <div className="opening-copy"><p className="kicker">the night kept a secret until it could say your name</p><h1>Chaimaa<br /><em>and then the sky answered</em></h1><p className="tiny-note">a ring · a diamond · a tiny cat guardian · and your new year</p></div>
         </div>
         <div className="opening-footer"><span>for your 23rd orbit around the sun</span><span>scroll when you are ready</span></div>
       </section>
